@@ -1,0 +1,137 @@
+from pygame import *
+from random import randint
+
+init()
+
+
+WIN_WIDTH = 800
+WIN_HEIGHT = 600
+
+window = display.set_mode((WIN_WIDTH, WIN_HEIGHT))
+display.set_caption("car racing")
+
+clock = time.Clock()
+FPS = 60
+
+
+GREEN = (0, 150, 0)
+GRAY = (70, 70, 70)
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+BLUE = (0, 100, 255)
+RED = (255, 0, 0)
+YELLOW = (255, 255, 0)
+
+
+road_width_top = 220
+road_width_bottom = 500
+
+
+road_center = WIN_WIDTH // 2
+
+player_img = transform.scale(image.load("car for race1.png"), (60, 120))
+enemy_img = transform.scale(image.load("car for race2.png"), (90, 120))
+
+player = Rect(370, 500, 60, 90)
+player_speed = 7
+road = transform.scale(image.load("Road.png"), (800, 600))
+
+
+enemy = Rect(randint(260, 500), -120, 60, 90)
+enemy_speed = 7
+
+class Enemy:
+
+    def __init__(self):
+        self.rect = Rect(randint(240, 500), randint(-600, -120), 60, 90)
+        self.speed = randint(5, 9)
+
+    def move(self):
+        self.rect.y += self.speed
+
+        if self.rect.top > WIN_HEIGHT:
+            self.rect.y = randint(-150, -120)
+            self.rect.x = randint(260, 520)
+
+    def draw(self):
+        window.blit(enemy_img, (self.rect.x, self.rect.y))
+
+
+finish_y = -5000
+finish_speed = enemy_speed
+
+game_font = font.SysFont("Arial", 45)
+
+enemies = []
+
+for i in range(5):
+    enemies.append(Enemy())
+
+
+
+game = True
+finish = False
+
+while game:
+
+    for e in event.get():
+        if e.type == QUIT:
+            game = False
+
+    if not finish:
+
+        keys = key.get_pressed()
+
+        if keys[K_LEFT]:
+            player.x -= player_speed
+
+        if keys[K_RIGHT]:
+            player.x += player_speed
+
+        if player.x < 0:
+            player.x = 0
+
+        if player.x > WIN_WIDTH - player.width:
+            player.x = WIN_WIDTH - player.width
+
+        for enemy in enemies:
+            enemy.move()
+
+
+        finish_y += finish_speed
+
+        for enemy in enemies:
+
+            if player.colliderect(enemy.rect):
+                finish = True
+                result = game_font.render("YOU LOSE!", True, RED)
+
+        if player.y <= finish_y + 20:
+            finish = True
+            result = game_font.render("YOU WIN!", True, GREEN)
+
+
+        window.fill(GREEN)
+
+
+        window.blit(road, (0, 0))
+
+
+        finish_rect = Rect(180, finish_y, 440, 60)
+
+        draw.rect(window, WHITE, finish_rect)
+
+
+        window.blit(player_img, (player.x, player.y))
+        for enemy in enemies:
+            enemy.draw()
+
+        for i in range(180, 620, 40):
+            draw.rect(window, BLACK, (i, finish_y, 20, 60))
+
+    else:
+        window.fill(BLACK)
+        window.blit(result, (250, 250))
+
+    display.update()
+    clock.tick(FPS)
